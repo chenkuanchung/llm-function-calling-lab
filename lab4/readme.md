@@ -108,11 +108,11 @@ ls lab3/out/
 python -m lab4.train_lora
 ```
 
-訓練過程會顯示：
+訓練過程會顯示 (示意)：
 ```
-Step 10: loss = 2.5432
-Step 20: loss = 1.8765
-Step 30: loss = 1.2345
+Step 1: loss = 2.5432
+Step 2: loss = 1.8765
+Step 3: loss = 1.2345
 ...
 Saved adapter to out_adapter
 ```
@@ -218,7 +218,9 @@ out = model.generate(**inputs, ...)
 ## ✅ 練習任務
 
 ### 任務 1：調整超參數
-嘗試不同的設定，觀察效果：
+嘗試不同的設定，觀察效果，調整超參數後在訓練一次：
+
+（可以不用全部按照以下表格調整）
 
 | 實驗 | 設定 | 預期效果 |
 |-----|------|---------|
@@ -227,22 +229,15 @@ out = model.generate(**inputs, ...)
 | C | lr=5e-5 | 較小學習率，訓練更穩 |
 | D | epochs=5 | 更多訓練，可能過擬合 |
 
-### 任務 2：擴充訓練資料
+### 任務 2：擴充訓練資料 （Bonus）
 回到 Lab3 擴充資料：
-- [ ] 增加到 100+ 筆訓練資料
+- [ ] 增加到 1000+ 筆訓練資料
 - [ ] 重新訓練並比較效果
 
-### 任務 3：QLoRA（進階）
-如果 GPU 記憶體不足，嘗試 QLoRA：
-```python
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_NAME,
-    load_in_4bit=True,  # 4-bit 量化
-    ...
-)
-```
+### 任務 3：aidaptiv（進階）（Bonus）
+使用aidaptiv訓練更大的模型
 
-### 任務 4：完整評估
+### 任務 4：完整評估 
 用 Lab2 的評估系統：
 1. 記錄微調前的 baseline 指標
 2. 訓練後重新評估

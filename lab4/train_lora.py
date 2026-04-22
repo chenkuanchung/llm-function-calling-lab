@@ -29,8 +29,8 @@ LAB 4：LoRA 微調訓練腳本
 
 import os
 from datasets import load_dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer, TrainingArguments
-from trl import SFTTrainer
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from trl import SFTTrainer, SFTConfig
 from peft import LoraConfig
 import torch
 
@@ -55,7 +55,7 @@ TRAIN_PATH = os.getenv("TRAIN_JSON", "lab3/out/train.json")
 VALID_PATH = os.getenv("VALID_JSON", "lab3/out/valid.json")
 
 # 輸出目錄
-OUT_DIR = os.getenv("OUT_DIR", "out_adapter")
+OUT_DIR = os.getenv("OUT_DIR", "lab4/out_adapter")
 
 
 def main():
@@ -201,14 +201,15 @@ def main():
     
     print("\n[Step 5] 設定訓練參數...")
     
-    training_args = TrainingArguments(
+    training_args = SFTConfig(
         output_dir=OUT_DIR,
         
         # 訓練設定
         num_train_epochs=3,                 # 訓練 2 個 epoch
         per_device_train_batch_size=1,      # 每 GPU batch size（根據記憶體調整）
         per_device_eval_batch_size=1,       # 評估 batch size
-        gradient_accumulation_steps=32,      # 梯度累積 32 步 
+        gradient_accumulation_steps=16,      # 梯度累積 16 步 
+        max_length=6144,
         
         # 學習率設定
         learning_rate=2e-4,                 # LoRA 常用較大學習率
@@ -217,7 +218,7 @@ def main():
         
         # 日誌和儲存
         logging_steps=1,                   # 每 1 步記錄一次
-        evaluation_strategy="epoch",        # 按步數評估
+        # eval_strategy="epoch",        # 按步數評估
         save_strategy="epoch",
         
         # 精度和優化
@@ -245,12 +246,9 @@ def main():
     
     trainer = SFTTrainer(
         model=model,
-        tokenizer=tokenizer,
         train_dataset=ds["train"],
         # eval_dataset=ds["validation"],
         peft_config=lora_config,            # LoRA 配置
-        dataset_text_field="text",          # 資料中的文字欄位名稱
-        max_seq_length=6144,                # 最大序列長度
         args=training_args,
     )
     

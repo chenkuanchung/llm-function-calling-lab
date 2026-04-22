@@ -28,12 +28,7 @@ lab3/out/
 
 ## 環境準備
 
-### 1. Python 套件
-```bash
-pip install requests jsonschema
-```
-
-### 2. 必須先啟動 vLLM 服務
+### 必須先啟動 vLLM 服務
 本 Lab **依賴 lab2 的 vLLM 服務**（同一個 endpoint）：
 
 ```
@@ -43,9 +38,12 @@ http://127.0.0.1:8299/v1/chat/completions
 
 請先確認 vLLM 已啟動（與 lab2 相同方式）。可用以下指令快速確認：
 ```bash
-python -c "import requests; print(requests.get('http://127.0.0.1:8299/v1/models', timeout=5).status_code)"
+uv run python -c "import requests; print(requests.get('http://127.0.0.1:8299/v1/models', timeout=5).status_code)"
 ```
 若回 `200` 即可繼續。若連線被拒，請先把 vLLM 服務跑起來。
+
+> 💡 本專案統一使用 [uv](https://docs.astral.sh/uv/) 管理依賴，
+> 所有指令前加 `uv run` 即可自動使用專案的虛擬環境，不需要另外 `pip install`。
 
 ---
 
@@ -121,7 +119,7 @@ SFT 是監督式微調，用標註好的「輸入-輸出」對來訓練模型。
 ### Step 1：生成訓練資料
 
 ```bash
-python -m lab3.generate_data --num 200
+uv run python -m lab3.generate_data --num 200
 ```
 
 可調參數：
@@ -137,7 +135,7 @@ python -m lab3.generate_data --num 200
 ```
 
 > 速度提醒：每筆需 2 次 LLM 呼叫，N=200 大約需要 5–15 分鐘（視 vLLM 機器而定）。
-> 若只想快速驗證流程，先試 `--num 20`。
+> 若只想快速驗證流程，先試 `uv run python -m lab3.generate_data --num 20`。
 
 完成後在 `lab3/out/` 產出：
 - `train.json`：訓練集（80%，JSON array）
@@ -147,8 +145,8 @@ python -m lab3.generate_data --num 200
 
 ### Step 2：檢查生成結果
 ```bash
-python -c "import json; d=json.load(open('lab3/out/train.json')); print(f'train: {len(d)} 筆'); print(json.dumps(d[0], ensure_ascii=False, indent=2))"
-python -c "import json; print('valid:', len(json.load(open('lab3/out/valid.json'))), '筆')"
+uv run python -c "import json; d=json.load(open('lab3/out/train.json')); print(f'train: {len(d)} 筆'); print(json.dumps(d[0], ensure_ascii=False, indent=2))"
+uv run python -c "import json; print('valid:', len(json.load(open('lab3/out/valid.json'))), '筆')"
 ```
 
 確認每筆資料都有 `system / user / assistant` 三個訊息，且 assistant 的內容是合法的 tool_call JSON。
@@ -228,14 +226,10 @@ while len(data) < num_examples:
 - [ ] 比較修改前後生成的 user query 風格差異
 
 ### 任務 2：擴充資料量
-- [ ] 用 `python -m lab3.generate_data --num 500` 生 500 筆，觀察分布與失敗率
+- [ ] 用 `uv run python -m lab3.generate_data --num 1000` 生 1000 筆，觀察分布與失敗率
 - [ ] 估算每筆生成的平均成本（時間）
 
-### 任務 3：強化 schema 驗證
-- [ ] 把 `max_retries` 從 3 調到 5，觀察成功率變化
-- [ ] 嘗試在 `_validate_args()` 後加自訂檢查（例如禁止 `details` 與 `reason` 內容相同）
-
-### 任務 4：加 Few-Shot 範例
+### 任務 3：加 Few-Shot 範例
 - [ ] 在 `ARGS_GEN_SYSTEM` 或 `QUERY_GEN_SYSTEM` 加入 1–2 個 few-shot 範例
 - [ ] 觀察是否提升小模型的生成穩定度
 
