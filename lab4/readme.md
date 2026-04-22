@@ -21,8 +21,8 @@ lab4/
 
 輸入目錄：
 lab3/out/
-├── train_text.jsonl   # Lab3 生成的訓練資料
-└── valid_text.jsonl   # Lab3 生成的驗證資料
+├── train.json         # Lab3 生成的訓練資料（messages 格式，JSON array）
+└── valid.json         # Lab3 生成的驗證資料（messages 格式，JSON array）
 
 輸出目錄：
 lab4/out_adapter/
@@ -92,11 +92,14 @@ W' = W + BA
 
 確保已完成 Lab3，並有以下檔案：
 ```bash
-ls ../lab3/out/
-# 應該看到 train_text.jsonl, valid_text.jsonl
+ls lab3/out/
+# 應該看到 train.json, valid.json
 ```
 
-如果沒有，請先完成Lab3：
+如果沒有，請先完成 Lab3。
+
+> 💡 本 Lab 會在訓練前自動用 tokenizer 的 `chat_template` 把 `messages`
+> 轉成訓練用的 text 字串，不需要 Lab3 額外產出 text 格式檔案。
 
 
 ### Step 2：執行 LoRA 訓練
@@ -155,14 +158,24 @@ python -m lab4.infer_adapter
 ### train_lora.py - 訓練腳本
 
 ```python
-# 1. 載入資料集
-ds = load_dataset("json", data_files={...})
+# 1. 載入資料集（Lab3 產出的 JSON array）
+ds = load_dataset("json", data_files={
+    "train": "lab3/out/train.json",
+    "validation": "lab3/out/valid.json",
+})
 
 # 2. 載入 Tokenizer 和模型
 tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
 model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, ...)
 
-# 3. 設定 LoRA 配置
+# 3. 用 chat_template 把 messages 轉成 text
+def format_example(ex):
+    return {"text": tokenizer.apply_chat_template(
+        ex["messages"], tokenize=False, add_generation_prompt=False
+    )}
+ds = ds.map(format_example, remove_columns=["messages"])
+
+# 4. 設定 LoRA 配置
 lora = LoraConfig(
     r=16,                    # 秩
     lora_alpha=32,           # 縮放
@@ -170,7 +183,7 @@ lora = LoraConfig(
     target_modules=[...],    # 目標層
 )
 
-# 4. 設定訓練參數
+# 5. 設定訓練參數
 args = TrainingArguments(
     output_dir=OUT_DIR,
     num_train_epochs=2,
@@ -178,11 +191,11 @@ args = TrainingArguments(
     ...
 )
 
-# 5. 開始訓練
+# 6. 開始訓練
 trainer = SFTTrainer(model, ...)
 trainer.train()
 
-# 6. 儲存 Adapter
+# 7. 儲存 Adapter
 trainer.save_model(OUT_DIR)
 ```
 

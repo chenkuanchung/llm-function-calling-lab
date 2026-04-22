@@ -23,7 +23,7 @@ LAB 4：LoRA 微調訓練腳本
     - 套件：torch, transformers, datasets, peft, trl, accelerate
 
 📂 輸入/輸出：
-    輸入：lab3/out/train_text.jsonl, valid_text.jsonl
+    輸入：lab3/out/train.json, valid.json  （messages 格式的 JSON array）
     輸出：out_adapter/
 """
 
@@ -42,7 +42,6 @@ import torch
 # 基礎模型名稱
 # 可以改成其他模型，例如：
 # - "meta-llama/Llama-3.2-3B-Instruct"
-# - "mistralai/Mistral-7B-Instruct-v0.2"
 MODEL_NAME = os.getenv("BASE_MODEL", "Qwen/Qwen2.5-3B-Instruct")
 """
 基礎模型選擇：
@@ -51,9 +50,9 @@ MODEL_NAME = os.getenv("BASE_MODEL", "Qwen/Qwen2.5-3B-Instruct")
 - Mistral 系列：平衡的選擇
 """
 
-# 訓練資料路徑（Lab4 的輸出）
-TRAIN_PATH = os.getenv("TRAIN_TEXT", "lab3/out/train_text.jsonl")
-VALID_PATH = os.getenv("VALID_TEXT", "lab3/out/valid_text.jsonl")
+# 訓練資料路徑（Lab3 的輸出，messages 格式的 JSON array）
+TRAIN_PATH = os.getenv("TRAIN_JSON", "lab3/out/train.json")
+VALID_PATH = os.getenv("VALID_JSON", "lab3/out/valid.json")
 
 # 輸出目錄
 OUT_DIR = os.getenv("OUT_DIR", "out_adapter")
@@ -65,12 +64,13 @@ def main():
     
     流程：
     ┌─────────────────────────────────────────────────────────────────┐
-    │  1. 載入資料集（JSONL → HuggingFace Dataset）                    │
+    │  1. 載入資料集（JSON → HuggingFace Dataset）                     │
     │  2. 載入 Tokenizer 和基礎模型                                    │
-    │  3. 設定 LoRA 配置（秩、目標層等）                               │
-    │  4. 設定訓練參數（學習率、batch size 等）                        │
-    │  5. 建立 SFTTrainer 並開始訓練                                   │
-    │  6. 儲存 Adapter 權重                                           │
+    │  3. 用 chat_template 把 messages 轉成訓練用的 text              │
+    │  4. 設定 LoRA 配置（秩、目標層等）                               │
+    │  5. 設定訓練參數（學習率、batch size 等）                        │
+    │  6. 建立 SFTTrainer 並開始訓練                                   │
+    │  7. 儲存 Adapter 權重                                           │
     └─────────────────────────────────────────────────────────────────┘
     """
     
@@ -85,21 +85,22 @@ def main():
     # ==========================================================================
     # Step 1: 載入資料集
     # ==========================================================================
-    # load_dataset 支援多種格式，這裡使用 json 格式
-    # 會自動讀取 JSONL 檔案並轉成 HuggingFace Dataset
+    # load_dataset("json", ...) 支援兩種 JSON 格式：
+    #   - JSON Lines（每行一個物件）
+    #   - JSON array（整份檔案是一個 [ {...}, {...} ] 陣列）← 本 Lab 用這種
     print("\n[Step 1] 載入資料集...")
-    
+
     ds = load_dataset(
         "json",
         data_files={
             "train": TRAIN_PATH,
-            "validation": VALID_PATH
-        }
+            "validation": VALID_PATH,
+        },
     )
-    
+
     print(f"  訓練集：{len(ds['train'])} 筆")
     print(f"  驗證集：{len(ds['validation'])} 筆")
-    
+
     # ==========================================================================
     # Step 2: 載入 Tokenizer 和模型
     # ==========================================================================
@@ -124,9 +125,28 @@ def main():
     )
     
     print(f"  模型已載入到：{model.device}")
-    
+
     # ==========================================================================
-    # Step 3: 設定 LoRA 配置
+    # Step 3: 把 messages 轉成訓練用的 text
+    # ==========================================================================
+    # Lab3 輸出的是 messages 格式（list of {role, content}），
+    # 這裡用模型自帶的 chat_template 把它拼成一整段 text 字串，
+    # 之後交給 SFTTrainer 的 dataset_text_field="text" 使用。
+    print("\n[Step 3] 套用 chat_template 轉成 text 欄位...")
+
+    def format_example(example):
+        text = tokenizer.apply_chat_template(
+            example["messages"],
+            tokenize=False,
+            add_generation_prompt=False,
+        )
+        return {"text": text}
+
+    ds = ds.map(format_example, remove_columns=["messages"])
+    print(f"  範例 text 片段：{ds['train'][0]['text'][:80]}...")
+
+    # ==========================================================================
+    # Step 4: 設定 LoRA 配置
     # ==========================================================================
     # LoRA 的關鍵超參數說明：
     #
@@ -146,7 +166,7 @@ def main():
     #   - 通常選 attention 的 projection 層
     #   - q_proj, k_proj, v_proj, o_proj 是常見選擇
     
-    print("\n[Step 3] 設定 LoRA 配置...")
+    print("\n[Step 4] 設定 LoRA 配置...")
     
     lora_config = LoraConfig(
         r=16,                   # 秩：16 是常用的起始值
@@ -167,7 +187,7 @@ def main():
     print(f"  Target modules: {lora_config.target_modules}")
     
     # ==========================================================================
-    # Step 4: 設定訓練參數
+    # Step 5: 設定訓練參數
     # ==========================================================================
     # TrainingArguments 包含所有訓練相關的設定
     #
@@ -179,16 +199,16 @@ def main():
     # - warmup_ratio：學習率預熱比例
     # - bf16：使用 bf16 精度
     
-    print("\n[Step 4] 設定訓練參數...")
+    print("\n[Step 5] 設定訓練參數...")
     
     training_args = TrainingArguments(
         output_dir=OUT_DIR,
         
         # 訓練設定
-        num_train_epochs=2,                 # 訓練 2 個 epoch
-        per_device_train_batch_size=2,      # 每 GPU batch size（根據記憶體調整）
-        per_device_eval_batch_size=2,       # 評估 batch size
-        gradient_accumulation_steps=8,      # 梯度累積 8 步 → 等效 batch=16
+        num_train_epochs=3,                 # 訓練 2 個 epoch
+        per_device_train_batch_size=1,      # 每 GPU batch size（根據記憶體調整）
+        per_device_eval_batch_size=1,       # 評估 batch size
+        gradient_accumulation_steps=32,      # 梯度累積 32 步 
         
         # 學習率設定
         learning_rate=2e-4,                 # LoRA 常用較大學習率
@@ -196,11 +216,9 @@ def main():
         max_grad_norm=1.0,                  # 梯度裁剪
         
         # 日誌和儲存
-        logging_steps=10,                   # 每 10 步記錄一次
-        evaluation_strategy="steps",        # 按步數評估
-        eval_steps=50,                      # 每 50 步評估一次
-        save_steps=50,                      # 每 50 步儲存一次
-        save_total_limit=2,                 # 最多保留 2 個 checkpoint
+        logging_steps=1,                   # 每 1 步記錄一次
+        evaluation_strategy="epoch",        # 按步數評估
+        save_strategy="epoch",
         
         # 精度和優化
         bf16=True,                          # 使用 bf16（需要支援的 GPU）
@@ -215,7 +233,7 @@ def main():
     print(f"  Learning rate: {training_args.learning_rate}")
     
     # ==========================================================================
-    # Step 5: 建立 SFTTrainer 並開始訓練
+    # Step 6: 建立 SFTTrainer 並開始訓練
     # ==========================================================================
     # SFTTrainer 是 TRL 提供的監督式微調訓練器
     # 它會自動處理：
@@ -223,16 +241,16 @@ def main():
     # - LoRA 的初始化和訓練
     # - 訓練迴圈
     
-    print("\n[Step 5] 建立 Trainer 並開始訓練...")
+    print("\n[Step 6] 建立 Trainer 並開始訓練...")
     
     trainer = SFTTrainer(
         model=model,
         tokenizer=tokenizer,
         train_dataset=ds["train"],
-        eval_dataset=ds["validation"],
+        # eval_dataset=ds["validation"],
         peft_config=lora_config,            # LoRA 配置
         dataset_text_field="text",          # 資料中的文字欄位名稱
-        max_seq_length=1024,                # 最大序列長度
+        max_seq_length=6144,                # 最大序列長度
         args=training_args,
     )
     
@@ -246,9 +264,9 @@ def main():
     print("訓練完成！")
     
     # ==========================================================================
-    # Step 6: 儲存 Adapter 權重
+    # Step 7: 儲存 Adapter 權重
     # ==========================================================================
-    print("\n[Step 6] 儲存 Adapter...")
+    print("\n[Step 7] 儲存 Adapter...")
     
     # 儲存 LoRA Adapter
     trainer.save_model(OUT_DIR)

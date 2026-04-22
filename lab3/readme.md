@@ -7,7 +7,6 @@
 - 理解 SFT 訓練資料的格式要求
 - 用 **LLM 兩階段生成**自動產出多元的訓練資料
 - 用 JSON Schema 驗證 LLM 輸出、失敗時重試
-- 將 messages 格式轉成 SFTTrainer 用的 text 格式
 
 
 ---
@@ -17,15 +16,12 @@
 ```
 lab3/
 ├── readme.md          # 本說明文件
-├── generate_data.py   # 自動生成訓練資料（LLM 兩階段生成）
-└── build_dataset.py   # 將 JSONL 轉成 SFT 訓練格式
+└── generate_data.py   # 自動生成訓練資料（LLM 兩階段生成）
 
 輸出目錄：
 lab3/out/
-├── train.jsonl        # 訓練集（messages 格式）
-├── valid.jsonl        # 驗證集（messages 格式）
-├── train_text.jsonl   # 訓練集（text 格式，供 SFTTrainer 使用）
-└── valid_text.jsonl   # 驗證集（text 格式）
+├── train.json         # 訓練集（messages 格式，80%）
+└── valid.json         # 驗證集（messages 格式,  20%）
 ```
 
 ---
@@ -66,9 +62,10 @@ SFT 是監督式微調，用標註好的「輸入-輸出」對來訓練模型。
 
 ---
 
-### 訓練資料格式
+### 訓練資料格式：Messages 格式
 
-#### 1. Messages 格式（原始格式）
+每一筆資料都是一組 `messages`，包含 system / user / assistant 三個角色：
+
 ```json
 {
   "messages": [
@@ -79,12 +76,12 @@ SFT 是監督式微調，用標註好的「輸入-輸出」對來訓練模型。
 }
 ```
 
-#### 2. Text 格式（供 SFTTrainer 使用）
-```json
-{
-  "text": "<|system|>\n你是訂單客服助理...\n\n<|user|>\n幫我查訂單...\n\n<|assistant|>\n{...}"
-}
-```
+> 💡 現代 SFT 框架（TRL `SFTTrainer`、Unsloth 等）都能直接吃 `messages` 格式 ——
+> 會自動套用 tokenizer 的 chat template 轉成訓練用的 token，不需要我們手動拼成 text。
+> 所以本 Lab 只需要產出 messages 格式的 JSON 檔案即可，Lab4 直接讀來訓練。
+
+> 📄 檔案格式：輸出是 **JSON array**（`[ {...}, {...}, ... ]`），用 `json.load()` 一次讀進來就是 list of dict，
+> 也能直接餵給 `datasets.load_dataset("json", ...)`。
 
 ---
 
@@ -143,24 +140,18 @@ python -m lab3.generate_data --num 200
 > 若只想快速驗證流程，先試 `--num 20`。
 
 完成後在 `lab3/out/` 產出：
-- `train.jsonl`：訓練集（80%）
-- `valid.jsonl`：驗證集（20%）
+- `train.json`：訓練集（80%，JSON array）
+- `valid.json`：驗證集（20%，JSON array）
 
 並印出每個 tool 的分布（10 個 tool 隨機抽選，總體大致均衡）。
 
-### Step 2：轉換成 SFT 訓練格式
+### Step 2：檢查生成結果
 ```bash
-python -m lab3.build_dataset
+python -c "import json; d=json.load(open('lab3/out/train.json')); print(f'train: {len(d)} 筆'); print(json.dumps(d[0], ensure_ascii=False, indent=2))"
+python -c "import json; print('valid:', len(json.load(open('lab3/out/valid.json'))), '筆')"
 ```
 
-產出：
-- `train_text.jsonl`
-- `valid_text.jsonl`
-
-### Step 3：驗證轉換結果
-```bash
-head -1 lab3/out/train_text.jsonl
-```
+確認每筆資料都有 `system / user / assistant` 三個訊息，且 assistant 的內容是合法的 tool_call JSON。
 
 ---
 
@@ -227,12 +218,6 @@ while len(data) < num_examples:
 - **QUERY_GEN_SYSTEM**：要求繁中口語、要包含 args 所有值、風格要多樣（禮貌 / 急躁 / 含糊…），且**只回那一句話**
 
 如果發現生成品質不理想，**改 prompt 是第一手段**（比改程式有效）。
-
-### `build_dataset.py`：格式轉換
-```python
-def convert(in_path, out_path):
-    # messages 格式 → "<|role|>\ncontent" 格式 → {"text": "..."}
-```
 
 ---
 

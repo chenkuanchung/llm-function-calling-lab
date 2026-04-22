@@ -302,15 +302,13 @@ def main(num_examples: int = 200, seed: int = 7):
     print(f"  Train: {len(train)} 筆")
     print(f"  Valid: {len(valid)} 筆")
 
-    train_path = out_dir / "train.jsonl"
+    train_path = out_dir / "train.json"
     with open(train_path, "w", encoding="utf-8") as f:
-        for ex in train:
-            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+        json.dump(train, f, ensure_ascii=False, indent=2)
 
-    valid_path = out_dir / "valid.jsonl"
+    valid_path = out_dir / "valid.json"
     with open(valid_path, "w", encoding="utf-8") as f:
-        for ex in valid:
-            f.write(json.dumps(ex, ensure_ascii=False) + "\n")
+        json.dump(valid, f, ensure_ascii=False, indent=2)
 
     print(f"\n輸出：")
     print(f"  {train_path}")

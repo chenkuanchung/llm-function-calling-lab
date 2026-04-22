@@ -1,2 +1,4 @@
 arxiv
 *__pycache*
+*/out
+uv.lock
