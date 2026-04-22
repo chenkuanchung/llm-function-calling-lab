@@ -1,0 +1,32 @@
+services:
+  vllm_lab2:
+    image: vllm/vllm-openai:v0.12.0
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
+
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "0"
+
+    volumes:
+      - ./:/workspace
+      - /mnt/ai-model:/llm
+
+    ports:
+      - "8299:8000"
+    ipc: host
+    # entrypoint: ["/workspace/entrypoint.sh"]
+
+    command: >  # 改model names
+      --model Qwen/Qwen2.5-3B-Instruct
+      --host 0.0.0.0
+      --port 8000
+      --served-model-name Qwen2.5-3B-Instruct
+      --max-model-len 8192
+      --kv-cache-dtype auto
+      -tp 1
+      --gpu-memory-utilization 0.9

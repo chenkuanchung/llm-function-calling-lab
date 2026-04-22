@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  aidaptiv_fine_tune:
+    image: licensesp/aidaptiv:vNXUN_2_04_00
+    volumes:
+      - ./:/workspace
+      - /mnt/nvme0:/media/nvme0
+      - /home/user/model:/mnt/model
+      - /usr/local/cuda:/usr/local/cuda
+    container_name: aidaptiv_fine_tune
+
+    deploy:
+      resources:
+        reservations:
+          devices:
+          - driver: nvidia
+            device_ids: ['0']
+            capabilities: [gpu]
+
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      stack:
+        soft: 67108864
+        hard: 67108864
+    ipc: host
+    pid: "host"
+    privileged: true
+    tty: true # 這是 -it 的等價選項
+    command: tail -f /dev/null
+

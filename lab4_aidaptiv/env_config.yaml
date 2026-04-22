@@ -1,0 +1,21 @@
+path_settings:
+  lora:
+    lora_weight: ""       # whether to load lora_weight (only activated when lora: true)
+    lora_optimizer: ""       # whether to load lora_optimizer (only activated when lora: true)
+    lora_output_dir: ""   # whether to save lora adapter weight (only activated when lora: true)
+  model_name_or_path: "/mnt/model/Qwen2.5-7B-Instruct"
+  multi_node_env_path: null
+  optimizer_path: "" # whether to load optimizer
+  train_data_path:
+    # - ./dataset_config/image-text-to-text/VQA_dataset_config.yaml 
+    # - ./dataset_config/text-generation/Pretrain_dataset_config.yaml
+    # - ./dataset_config/text-generation/RAG_dataset_config.yaml
+    - ./dataset_config/text-generation/QA_dataset_config.yaml
+  val_data_path: null
+    # - ./dataset_config/image-text-to-text/VQA_dataset_config.yaml 
+    # - ./dataset_config/text-generation/Pretrain_dataset_config.yaml
+    # - ./dataset_config/text-generation/RAG_dataset_config.yaml
+    # - ./dataset_config/text-generation/QA_dataset_config.yaml
+  nvme_path: "/media/nvme0"
+  output_dir: "/workspace/output_model"
+  log_name: "/workspace/ft.log"

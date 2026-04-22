@@ -1,0 +1,9 @@
+rm-static:
+  data_path: "/workspace/train.json"  # 確保路徑正確並相符
+  strategy: "QA"  # 策略：問答
+  system_prompt: "你是一個客服助理，請用繁體中文回答使用者的問題。"
+  user_prompt: "{question}"  # 使用者提出的問題格式
+  question_key: "question"  # 資料集中問題的鍵名稱
+  answer_key: "answer"  # 資料集中答案的鍵名稱（修正為 "answer" 更符合實際需求命名）
+  exp_type: "train"  # 運行類型（這裡為訓練模式）
+  label_key: "answer"  # 同 answer_key，作為標籤參考
