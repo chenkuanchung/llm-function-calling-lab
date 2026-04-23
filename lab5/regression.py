@@ -33,7 +33,7 @@ import time
 API_URL = "http://localhost:9000/chat"
 
 # 測試案例檔案（Lab2 的測試集）
-EVAL_CASES_PATH = "../lab2/eval_cases.json"
+EVAL_CASES_PATH = "lab2/eval_cases.json"
 
 # 輸出目錄
 OUTPUT_DIR = Path("lab5_deploy_regression")

@@ -34,7 +34,7 @@ from peft import PeftModel
 BASE_MODEL = os.getenv("BASE_MODEL", "Qwen/Qwen2.5-3B-Instruct")
 
 # LoRA Adapter 路徑（train_lora.py 的輸出）
-ADAPTER_DIR = os.getenv("ADAPTER_DIR", "out_adapter")
+ADAPTER_DIR = os.getenv("ADAPTER_DIR", "lab4/out_adapter")
 
 
 def generate(prompt: str, use_adapter: bool = True) -> str:

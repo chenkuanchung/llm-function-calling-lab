@@ -23,10 +23,23 @@ LAB 5：FastAPI 服務 - Function Calling Agent HTTP API
     啟動後訪問 http://localhost:9000/docs 查看 Swagger UI
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import time
+import requests # 用於檢查 vLLM 連線
+from datetime import datetime, timezone # 用於產生時間戳記
+
+# --- 新增 SlowAPI 限流套件 ---
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+# --- 新增 結構化日誌套件 ---
+import structlog
+from uuid import uuid4
+
+logger = structlog.get_logger()
 
 # 共用模組
 from common.call_llm import call_llm
@@ -48,6 +61,25 @@ app = FastAPI(
     redoc_url="/redoc",     # ReDoc 路徑
 )
 
+# --- 設定限流器 (Rate Limiter) ---
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+def check_llm_connection() -> str:
+    """
+    檢查 vLLM 服務是否正常連線
+    """
+    try:
+        # 參考 Lab 3 的環境準備建議，檢查 vLLM 的 models 資訊
+        # 設定較短的 timeout (2秒)，避免健康檢查卡住
+        resp = requests.get("http://127.0.0.1:8299/v1/models", timeout=2)
+        if resp.status_code == 200:
+            return "connected"
+        return f"error: status_code {resp.status_code}"
+    except Exception as e:
+        return f"disconnected"
 
 # ==============================================================================
 # Request/Response 模型定義
@@ -101,7 +133,8 @@ class ChatResp(BaseModel):
 # ==============================================================================
 
 @app.post("/chat", response_model=ChatResp)
-def chat(req: ChatReq):
+@limiter.limit("15/minute")  # 限制每個 IP 每分鐘最多只能呼叫 15 次
+def chat(request: Request, req: ChatReq):
     """
     聊天端點 - 處理使用者訊息並可能呼叫工具
     
@@ -124,6 +157,16 @@ def chat(req: ChatReq):
     
     # 記錄開始時間（用於計算延遲）
     start_time = time.time()
+
+    # 產生請求 ID 與擷取使用者輸入
+    req_id = str(uuid4())
+    user_message = req.messages[-1]["content"] if req.messages else ""
+    executed_tool = None  # 用來追蹤最後到底呼叫了哪個工具
+    
+    trace = {
+        "steps": [],
+        "latency_ms": 0
+    }
     
     # ==========================================================================
     # Step 1: 組合對話歷史
@@ -203,6 +246,8 @@ def chat(req: ChatReq):
     # ==========================================================================
     name = tool_call["name"]
     args = tool_call["arguments"]
+
+    executed_tool = name
     
     trace["steps"].append({"tool_call": tool_call})
     
@@ -234,6 +279,15 @@ def chat(req: ChatReq):
     # ==========================================================================
     trace["latency_ms"] = int((time.time() - start_time) * 1000)
     
+    # --- 印出結構化日誌 ---
+    logger.info(
+        "chat_request_completed",
+        request_id=req_id,
+        user_input=user_message,
+        tool_name=executed_tool,
+        latency_ms=trace["latency_ms"]
+    )
+
     return {"messages": messages, "trace": trace}
 
 
@@ -253,7 +307,8 @@ def health():
     """
     return {
         "status": "healthy",
-        "timestamp": time.time(),
+        "llm_status": check_llm_connection(),
+        "timestamp": datetime.now(timezone.utc).isoformat() # 使用 ISO 格式的時間戳記
     }
 
 

@@ -320,6 +320,30 @@ TOOLS = [
             "additionalProperties": False
         },
     },
+
+    # --------------------------------------------------------------------------
+    # 工具 11：搜尋商品
+    # --------------------------------------------------------------------------
+    {
+        "name": "search_products",
+        "description": "根據關鍵字與分類搜尋商品清單與價格。",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "keyword": {
+                    "type": "string",
+                    "description": "要搜尋的商品關鍵字，例如：耳機、毛巾、保溫瓶"
+                },
+                "category": {
+                    "type": "string",
+                    "description": "商品分類過濾條件（可選）",
+                    "enum": ["3C", "生活用品", "運動", "全部"]
+                }
+            },
+            "required": ["keyword"],
+            "additionalProperties": False
+        },
+    },
 ]
 
 

@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+slowapi
+structlog
+pydantic
+jsonschema

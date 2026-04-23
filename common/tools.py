@@ -156,6 +156,18 @@ PRODUCTS = {
     - 其他 SKU：PRODUCT_NOT_FOUND
 """
 
+PRODUCT_CATALOG = [
+    {"sku": "SKU000001", "name": "藍牙耳機", "category": "3C", "price": 1290},
+    {"sku": "SKU000002", "name": "充電線 1m", "category": "3C", "price": 199},
+    {"sku": "SKU000003", "name": "保溫瓶 500ml", "category": "生活用品", "price": 690},
+    {"sku": "SKU000004", "name": "運動毛巾", "category": "運動", "price": 250},
+    {"sku": "SKU000005", "name": "無線滑鼠", "category": "3C", "price": 890},
+    {"sku": "SKU000006", "name": "瑜珈墊", "category": "運動", "price": 499},
+]
+"""
+模擬的商品型錄資料庫 (供 search_products 使用)
+"""
+
 ADDRESSES = {
     "A000000001": {"recipient": "王小明", "phone": "0912345678", "address": "台北市信義區某路 1 號"},
     "A123456789": {"recipient": "陳大華", "phone": "0987654321", "address": "新北市板橋區某路 99 號"},
@@ -597,6 +609,43 @@ def check_product_stock(sku: str) -> Dict[str, Any]:
 
     return {"ok": True, "sku": sku, **PRODUCTS[sku]}
 
+def search_products(keyword: str, category: str = "全部") -> Dict[str, Any]:
+    """
+    搜尋商品
+    
+    根據關鍵字與分類搜尋商品。
+    
+    Args:
+        keyword: 搜尋關鍵字
+        category: 商品分類 (預設為 全部)
+    """
+    time.sleep(0.1)
+    
+    results = []
+    for p in PRODUCT_CATALOG:
+        # 如果有指定分類，且分類不為"全部"，則過濾分類
+        if category and category != "全部" and p["category"] != category:
+            continue
+            
+        # 關鍵字比對 (轉小寫比對)
+        if keyword.lower() in p["name"].lower():
+            results.append(p)
+            
+    if not results:
+        return {
+            "ok": False, 
+            "error": "NO_PRODUCTS_FOUND", 
+            "keyword": keyword, 
+            "message": f"找不到包含「{keyword}」的商品。"
+        }
+        
+    return {
+        "ok": True,
+        "keyword": keyword,
+        "category": category,
+        "count": len(results),
+        "results": results
+    }
 
 def escalate_to_human(topic: str, summary: str, order_id: str = "") -> Dict[str, Any]:
     """
@@ -648,6 +697,7 @@ TOOL_REGISTRY = {
     "apply_coupon": apply_coupon,
     "check_product_stock": check_product_stock,
     "escalate_to_human": escalate_to_human,
+    "search_products": search_products,
 }
 """
 工具註冊表

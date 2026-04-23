@@ -116,7 +116,12 @@ def tool_selection_correct(pred_tool: str | None, expect: dict) -> bool:
     #       ...（比對工具名稱）
     #   ...（沒有 "tool" 時，pred_tool 應為 None）
     # -------------------------------------------------------------------------
-    raise NotImplementedError("TODO 1：請實作 tool_selection_correct")
+    if "tool" in expect:
+        # 如果預期有工具，比對名稱是否一致
+        return pred_tool == expect["tool"]
+    
+    # 如果預期沒有工具（例如閒聊或需追問），預測的工具必須是 None
+    return pred_tool is None
 
 
 def args_exact_match(pred_args: dict | None, expect: dict) -> bool:
@@ -146,7 +151,12 @@ def args_exact_match(pred_args: dict | None, expect: dict) -> bool:
     #       ...（沒有預期參數，pred_args 應為 None）
     #   ...（有預期參數，直接比對）
     # -------------------------------------------------------------------------
-    raise NotImplementedError("TODO 2：請實作 args_exact_match")
+    if "arguments" not in expect:
+        # 如果預期沒有參數，預測的參數也必須是 None
+        return pred_args is None
+        
+    # 如果有預期參數，直接比對兩個 dict 是否完全相等
+    return pred_args == expect["arguments"]
 
 
 # ==============================================================================
@@ -203,7 +213,23 @@ def run_one(case: dict) -> dict:
     #   except Exception as e:
     #       pred["error"] = f"json_parse_error:{e}"
     # -------------------------------------------------------------------------
-    raise NotImplementedError("TODO 3：請加入 try/except 處理 JSON 提取與解析失敗")
+    try:
+        tool_call = extract_json_block(out)
+        
+        # 如果 extract_json_block 回傳 None，代表模型沒有輸出 JSON
+        # 這可能是模型判斷不需要呼叫工具（閒聊或追問），這是正常的，直接回傳預設的 pred
+        if tool_call is None:
+            return pred   
+            
+        ok, err = validate_tool_call(tool_call)
+        pred["tool"]      = tool_call.get("name")
+        pred["arguments"] = tool_call.get("arguments")
+        pred["valid"]     = ok
+        pred["error"]     = err
+        
+    except Exception as e:
+        # 捕捉任何解析或取值過程中發生的意外錯誤
+        pred["error"] = f"json_parse_error:{e}"
 
     return pred
 

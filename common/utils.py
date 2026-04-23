@@ -150,7 +150,7 @@ def pretty(obj: Any) -> str:
         ]
     
     特性：
-        - ensure_ascii=False：保留中文（不轉成 \uXXXX）
+        - ensure_ascii=False：保留中文
         - indent=2：使用 2 空格縮排
     """
     

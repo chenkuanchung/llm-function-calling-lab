@@ -1,0 +1,4 @@
+.venv/
+__pycache__/
+*.pyc
+lab4/out_adapter/

@@ -1,0 +1,472 @@
+{
+  "summary": {
+    "n": 32,
+    "valid_rate": 0.6562,
+    "tool_acc": 0.9688,
+    "args_exact": 0.8421
+  },
+  "rows": [
+    {
+      "id": "c1",
+      "valid": true,
+      "pred_tool": "get_order_status",
+      "pred_args": {
+        "order_id": "A123456789"
+      },
+      "expect": {
+        "tool": "get_order_status",
+        "arguments": {
+          "order_id": "A123456789"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c2",
+      "valid": true,
+      "pred_tool": "track_shipment",
+      "pred_args": {
+        "tracking_no": "TWD12345678"
+      },
+      "expect": {
+        "tool": "track_shipment",
+        "arguments": {
+          "tracking_no": "TWD12345678"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c3",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c4",
+      "valid": true,
+      "pred_tool": "get_order_status",
+      "pred_args": {
+        "order_id": "A000000001"
+      },
+      "expect": {
+        "tool": "get_order_status",
+        "arguments": {
+          "order_id": "A000000001"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c5",
+      "valid": true,
+      "pred_tool": "get_order_status",
+      "pred_args": {
+        "order_id": "A111111111"
+      },
+      "expect": {
+        "tool": "get_order_status",
+        "arguments": {
+          "order_id": "A111111111"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c6",
+      "valid": true,
+      "pred_tool": "get_order_status",
+      "pred_args": {
+        "order_id": "A123456789"
+      },
+      "expect": {
+        "tool": "get_order_status",
+        "arguments": {
+          "order_id": "A123456789"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c7",
+      "valid": true,
+      "pred_tool": "cancel_order",
+      "pred_args": {
+        "order_id": "A000000001"
+      },
+      "expect": {
+        "tool": "cancel_order",
+        "arguments": {
+          "order_id": "A000000001"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c8",
+      "valid": true,
+      "pred_tool": "cancel_order",
+      "pred_args": {
+        "order_id": "A123456789"
+      },
+      "expect": {
+        "tool": "cancel_order",
+        "arguments": {
+          "order_id": "A123456789"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c9",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c10",
+      "valid": true,
+      "pred_tool": "get_order_items",
+      "pred_args": {
+        "order_id": "A123456789"
+      },
+      "expect": {
+        "tool": "get_order_items",
+        "arguments": {
+          "order_id": "A123456789"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c11",
+      "valid": true,
+      "pred_tool": "get_order_items",
+      "pred_args": {
+        "order_id": "A000000001"
+      },
+      "expect": {
+        "tool": "get_order_items",
+        "arguments": {
+          "order_id": "A000000001"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c12",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c13",
+      "valid": true,
+      "pred_tool": "update_shipping_address",
+      "pred_args": {
+        "order_id": "A000000001",
+        "recipient": "王大明",
+        "phone": "0911222333",
+        "address": "台北市中山區某路 5 資"
+      },
+      "expect": {
+        "tool": "update_shipping_address",
+        "arguments": {
+          "order_id": "A000000001",
+          "recipient": "王大明",
+          "phone": "0911222333",
+          "address": "台北市中山區某路 5 號"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": false
+    },
+    {
+      "id": "c14",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c15",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c16",
+      "valid": true,
+      "pred_tool": "get_refund_status",
+      "pred_args": {
+        "case_id": "R100001"
+      },
+      "expect": {
+        "tool": "get_refund_status",
+        "arguments": {
+          "case_id": "R100001"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c17",
+      "valid": true,
+      "pred_tool": "get_refund_status",
+      "pred_args": {
+        "case_id": "R100002"
+      },
+      "expect": {
+        "tool": "get_refund_status",
+        "arguments": {
+          "case_id": "R100002"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c18",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c19",
+      "valid": true,
+      "pred_tool": "apply_coupon",
+      "pred_args": {
+        "order_id": "A000000001",
+        "coupon_code": "WELCOME100"
+      },
+      "expect": {
+        "tool": "apply_coupon",
+        "arguments": {
+          "order_id": "A000000001",
+          "coupon_code": "WELCOME100"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c20",
+      "valid": true,
+      "pred_tool": "apply_coupon",
+      "pred_args": {
+        "order_id": "A123456789",
+        "coupon_code": "VIP500"
+      },
+      "expect": {
+        "tool": "apply_coupon",
+        "arguments": {
+          "order_id": "A123456789",
+          "coupon_code": "VIP500"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c21",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c22",
+      "valid": true,
+      "pred_tool": "check_product_stock",
+      "pred_args": {
+        "sku": "SKU000001"
+      },
+      "expect": {
+        "tool": "check_product_stock",
+        "arguments": {
+          "sku": "SKU000001"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c23",
+      "valid": true,
+      "pred_tool": "check_product_stock",
+      "pred_args": {
+        "sku": "SKU000002"
+      },
+      "expect": {
+        "tool": "check_product_stock",
+        "arguments": {
+          "sku": "SKU000002"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c24",
+      "valid": true,
+      "pred_tool": "check_product_stock",
+      "pred_args": {
+        "sku": "SKU000012"
+      },
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": false,
+      "args_ok": null
+    },
+    {
+      "id": "c25",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {
+        "should_ask_clarification": true
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c26",
+      "valid": true,
+      "pred_tool": "escalate_to_human",
+      "pred_args": {
+        "topic": "退換貨",
+        "summary": "訂單 A123456789 出現問題，希望轉交真人客服處理退換貨事宜"
+      },
+      "expect": {
+        "tool": "escalate_to_human"
+      },
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c27",
+      "valid": true,
+      "pred_tool": "create_refund_request",
+      "pred_args": {
+        "order_id": "A123456789",
+        "reason": "商品瑕疵",
+        "details": "商品壞了"
+      },
+      "expect": {
+        "tool": "create_refund_request",
+        "arguments": {
+          "order_id": "A123456789",
+          "reason": "商品瑕疵"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": false
+    },
+    {
+      "id": "c28",
+      "valid": true,
+      "pred_tool": "create_refund_request",
+      "pred_args": {
+        "order_id": "A000000001",
+        "reason": "重複下單",
+        "details": "用戶在沒有確認是否已經有訂單的情況下再次下單"
+      },
+      "expect": {
+        "tool": "create_refund_request",
+        "arguments": {
+          "order_id": "A000000001",
+          "reason": "重複下單"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": false
+    },
+    {
+      "id": "c29",
+      "valid": true,
+      "pred_tool": "track_shipment",
+      "pred_args": {
+        "tracking_no": "TWD87654321"
+      },
+      "expect": {
+        "tool": "track_shipment",
+        "arguments": {
+          "tracking_no": "TWD87654321"
+        }
+      },
+      "tool_ok": true,
+      "args_ok": true
+    },
+    {
+      "id": "c30",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {},
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c31",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {},
+      "tool_ok": true,
+      "args_ok": null
+    },
+    {
+      "id": "c32",
+      "valid": false,
+      "pred_tool": null,
+      "pred_args": null,
+      "expect": {},
+      "tool_ok": true,
+      "args_ok": null
+    }
+  ]
+}
